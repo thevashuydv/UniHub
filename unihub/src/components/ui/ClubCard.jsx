@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { clubLogos } from '../../utils/imageData';
 
 export default function ClubCard({ club }) {
   const { id, name, description, logoUrl, memberCount, category } = club;
@@ -9,7 +10,7 @@ export default function ClubCard({ club }) {
       <div className="h-32 bg-gradient-to-r from-gray-50 to-gray-100 flex items-center justify-center rounded-t-xl relative overflow-hidden">
         <div className="absolute inset-0 opacity-30 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]" aria-hidden="true"></div>
         <img
-          src={logoUrl || 'https://via.placeholder.com/150?text=Club'}
+          src={logoUrl || clubLogos[name.toLowerCase().replace(/\s+/g, '')] || clubLogos.techClub}
           alt={name}
           className="h-20 w-20 object-contain relative z-10 transition-transform duration-300 hover:scale-110"
         />
@@ -30,7 +31,7 @@ export default function ClubCard({ club }) {
         <p className="text-gray-700 mb-4 line-clamp-2">{description}</p>
         <Link
           to={`/clubs/${id}`}
-          className="block w-full text-center btn-primary px-4 py-2 rounded-lg text-sm hover:shadow-md transition-all duration-300 flex items-center justify-center gap-1"
+          className="w-full btn-primary px-4 py-2 rounded-lg text-sm hover:shadow-md transition-all duration-300 flex items-center justify-center gap-1"
         >
           <span>View Club</span>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

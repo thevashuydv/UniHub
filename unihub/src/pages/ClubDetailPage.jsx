@@ -1,17 +1,44 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import Button from '../components/ui/Button';
 import EventCard from '../components/ui/EventCard';
+import { clubLogos, clubCovers, eventImages } from '../utils/imageData';
 
-// Mock data for demonstration
-const clubs = [
+export default function ClubDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { currentUser, loading: authLoading } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [activeTab, setActiveTab] = useState('about');
+  const [club, setClub] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load club data
+  useEffect(() => {
+    // First check localStorage for user-created clubs
+    const storedClubs = JSON.parse(localStorage.getItem('unihub_clubs') || '[]');
+    const storedClub = storedClubs.find(c => c.id === id);
+
+    if (storedClub) {
+      setClub(storedClub);
+      // Check if current user is following this club
+      if (!authLoading && currentUser) {
+        setIsFollowing(storedClub.followers?.includes(currentUser.uid) || false);
+      }
+      setLoading(false);
+      return;
+    }
+
+    // If not found in localStorage, check mock data
+    const mockClubs = [
   {
     id: '1',
     name: 'Tech Club',
     description: 'A community for tech enthusiasts to learn, collaborate, and innovate together. We organize workshops, hackathons, and tech talks to help members develop their technical skills and stay updated with the latest trends in technology.',
     longDescription: 'The Tech Club is a student-run organization dedicated to fostering a community of technology enthusiasts on campus. Our mission is to provide opportunities for students to enhance their technical skills, collaborate on innovative projects, and connect with industry professionals.\n\nWe organize a variety of events throughout the academic year, including workshops on programming languages and frameworks, hackathons where students can build projects in teams, tech talks featuring guest speakers from leading tech companies, and networking sessions with alumni working in the tech industry.\n\nWhether you\'re a computer science major or simply interested in technology, the Tech Club welcomes members from all academic backgrounds and skill levels. Join us to learn, collaborate, and innovate together!',
-    logoUrl: 'https://via.placeholder.com/150?text=Tech',
-    coverImageUrl: 'https://via.placeholder.com/1200x400?text=Tech+Club+Cover',
+    logoUrl: clubLogos.techClub,
+    coverImageUrl: clubCovers.techClub,
     memberCount: 120,
     category: 'Technology',
     foundedYear: 2015,
@@ -36,7 +63,7 @@ const clubs = [
         location: 'Main Auditorium',
         clubId: '1',
         clubName: 'Tech Club',
-        imageUrl: 'https://via.placeholder.com/400x200?text=Tech+Conference'
+        imageUrl: eventImages.techConference
       },
       {
         id: '6',
@@ -46,7 +73,7 @@ const clubs = [
         location: 'Computer Science Building',
         clubId: '1',
         clubName: 'Tech Club',
-        imageUrl: 'https://via.placeholder.com/400x200?text=Hackathon'
+        imageUrl: eventImages.hackathon
       }
     ],
     pastEvents: [
@@ -58,7 +85,7 @@ const clubs = [
         location: 'Computer Science Building, Room 101',
         clubId: '1',
         clubName: 'Tech Club',
-        imageUrl: 'https://via.placeholder.com/400x200?text=Web+Dev'
+        imageUrl: eventImages.webDevWorkshop
       }
     ]
   },
@@ -67,8 +94,8 @@ const clubs = [
     name: 'Art Society',
     description: 'Express your creativity through various art forms and showcase your talent.',
     longDescription: 'The Art Society is a vibrant community of artists and art enthusiasts dedicated to promoting creativity and artistic expression on campus. We provide a supportive environment for members to explore various art forms, develop their skills, and showcase their work.\n\nOur activities include regular art workshops covering techniques in painting, drawing, sculpture, and digital art; exhibitions to display student artwork; collaborative art projects; and visits to local galleries and museums.\n\nThe Art Society welcomes members of all skill levels, from beginners to experienced artists. Whether you\'re pursuing a degree in fine arts or simply enjoy art as a hobby, you\'ll find a place in our community.',
-    logoUrl: 'https://via.placeholder.com/150?text=Art',
-    coverImageUrl: 'https://via.placeholder.com/1200x400?text=Art+Society+Cover',
+    logoUrl: clubLogos.artSociety,
+    coverImageUrl: clubCovers.artSociety,
     memberCount: 85,
     category: 'Arts & Culture',
     foundedYear: 2010,
@@ -93,7 +120,7 @@ const clubs = [
         location: 'Art Gallery',
         clubId: '2',
         clubName: 'Art Society',
-        imageUrl: 'https://via.placeholder.com/400x200?text=Art+Exhibition'
+        imageUrl: eventImages.artExhibition
       }
     ],
     pastEvents: [
@@ -105,20 +132,24 @@ const clubs = [
         location: 'Arts Building, Studio 3',
         clubId: '2',
         clubName: 'Art Society',
-        imageUrl: 'https://via.placeholder.com/400x200?text=Painting'
+        imageUrl: eventImages.paintingWorkshop
       }
     ]
   }
 ];
 
-export default function ClubDetailPage() {
-  const { id } = useParams();
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [activeTab, setActiveTab] = useState('about');
-  
-  // Find the club with the matching ID
-  const club = clubs.find(club => club.id === id);
-  
+    const mockClub = mockClubs.find(c => c.id === id);
+    if (mockClub) {
+      setClub(mockClub);
+    }
+    setLoading(false);
+  }, [id, authLoading, currentUser]);
+
+  // If still loading, show loading state
+  if (loading) {
+    return <div className="text-center py-12">Loading...</div>;
+  }
+
   // If club not found, show error message
   if (!club) {
     return (
@@ -131,11 +162,58 @@ export default function ClubDetailPage() {
       </div>
     );
   }
-  
+
   // Handle follow/unfollow
   const handleFollowToggle = () => {
-    setIsFollowing(!isFollowing);
-    // In a real app, this would make an API call to update the database
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+
+    const newFollowingState = !isFollowing;
+    setIsFollowing(newFollowingState);
+
+    // Update localStorage
+    const storedClubs = JSON.parse(localStorage.getItem('unihub_clubs') || '[]');
+    const clubIndex = storedClubs.findIndex(c => c.id === id);
+
+    if (clubIndex !== -1) {
+      // Club exists in localStorage
+      if (newFollowingState) {
+        // Add user to followers if not already following
+        if (!storedClubs[clubIndex].followers) {
+          storedClubs[clubIndex].followers = [];
+        }
+        if (!storedClubs[clubIndex].followers.includes(currentUser.uid)) {
+          storedClubs[clubIndex].followers.push(currentUser.uid);
+        }
+      } else {
+        // Remove user from followers
+        if (storedClubs[clubIndex].followers) {
+          storedClubs[clubIndex].followers = storedClubs[clubIndex].followers.filter(uid => uid !== currentUser.uid);
+        }
+      }
+
+      localStorage.setItem('unihub_clubs', JSON.stringify(storedClubs));
+
+      // Update notifications (in a real app, this would be handled by a backend service)
+      const notifications = JSON.parse(localStorage.getItem('unihub_notifications') || '[]');
+
+      if (newFollowingState) {
+        notifications.push({
+          id: Date.now().toString(),
+          userId: currentUser.uid,
+          type: 'club_follow',
+          title: `You are now following ${club.name}`,
+          message: `You will now receive updates about events and posts from ${club.name}.`,
+          date: new Date().toISOString(),
+          read: false,
+          clubId: club.id
+        });
+      }
+
+      localStorage.setItem('unihub_notifications', JSON.stringify(notifications));
+    }
   };
 
   return (
@@ -143,8 +221,8 @@ export default function ClubDetailPage() {
       {/* Club Header */}
       <div className="relative">
         <div className="h-64 w-full overflow-hidden">
-          <img 
-            src={club.coverImageUrl} 
+          <img
+            src={club.coverImageUrl}
             alt={club.name}
             className="w-full h-full object-cover"
           />
@@ -152,8 +230,8 @@ export default function ClubDetailPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative -mt-16 sm:-mt-24 flex items-end pb-4">
             <div className="bg-white p-2 rounded-lg shadow-lg">
-              <img 
-                src={club.logoUrl} 
+              <img
+                src={club.logoUrl}
                 alt={club.name}
                 className="h-24 w-24 sm:h-32 sm:w-32 object-contain"
               />
@@ -165,18 +243,51 @@ export default function ClubDetailPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Club Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between mb-8">
           <div className="flex space-x-4 mb-4 md:mb-0">
-            <Button 
-              onClick={handleFollowToggle}
-              variant={isFollowing ? 'secondary' : 'primary'}
-            >
-              {isFollowing ? 'Unfollow' : 'Follow Club'}
+            {currentUser ? (
+              <Button
+                onClick={handleFollowToggle}
+                variant={isFollowing ? 'outline' : 'primary'}
+                className="inline-flex items-center gap-1"
+              >
+                {isFollowing ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Following</span>
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Follow Club</span>
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => navigate('/sign-in')}
+                variant="primary"
+                className="inline-flex items-center gap-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Follow Club</span>
+              </Button>
+            )}
+            <Button variant="secondary" className="inline-flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span>Contact</span>
             </Button>
-            <Button variant="secondary">Contact</Button>
           </div>
           <div className="flex space-x-4">
             {club.socialMedia.website && (
@@ -202,7 +313,7 @@ export default function ClubDetailPage() {
             )}
           </div>
         </div>
-        
+
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-8">
           <nav className="-mb-px flex space-x-8">
@@ -248,7 +359,7 @@ export default function ClubDetailPage() {
             </button>
           </nav>
         </div>
-        
+
         {/* Tab Content */}
         {activeTab === 'about' && (
           <div>
@@ -286,8 +397,8 @@ export default function ClubDetailPage() {
                   <ul className="space-y-4">
                     {club.leaders.map((leader, index) => (
                       <li key={index} className="flex items-center">
-                        <img 
-                          src={leader.imageUrl} 
+                        <img
+                          src={leader.imageUrl}
                           alt={leader.name}
                           className="h-10 w-10 rounded-full mr-3"
                         />
@@ -303,7 +414,7 @@ export default function ClubDetailPage() {
             </div>
           </div>
         )}
-        
+
         {activeTab === 'events' && (
           <div>
             <div className="mb-8">
@@ -318,7 +429,7 @@ export default function ClubDetailPage() {
                 <p className="text-gray-500">No upcoming events scheduled.</p>
               )}
             </div>
-            
+
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Past Events</h2>
               {club.pastEvents.length > 0 ? (
@@ -333,7 +444,7 @@ export default function ClubDetailPage() {
             </div>
           </div>
         )}
-        
+
         {activeTab === 'members' && (
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Club Members</h2>
@@ -341,7 +452,7 @@ export default function ClubDetailPage() {
             <p className="text-gray-700">To view the full member list, please follow the club.</p>
           </div>
         )}
-        
+
         {activeTab === 'discussions' && (
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Discussions</h2>

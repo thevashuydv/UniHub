@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { UserButton, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { useAuth } from '../../contexts/AuthContext';
+import UserProfile from '../auth/UserProfile';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
@@ -16,6 +17,7 @@ function classNames(...classes) {
 }
 
 export default function Navbar() {
+  const { currentUser } = useAuth();
   return (
     <Disclosure as="nav" className="bg-white shadow-soft sticky top-0 z-50">
       {({ open }) => (
@@ -70,12 +72,11 @@ export default function Navbar() {
                 </button>
 
                 {/* Profile dropdown */}
-                <SignedIn>
+                {currentUser ? (
                   <div className="ml-3 relative">
-                    <UserButton />
+                    <UserProfile />
                   </div>
-                </SignedIn>
-                <SignedOut>
+                ) : (
                   <div className="ml-3 flex space-x-2">
                     <Link
                       to="/sign-in"
@@ -90,7 +91,7 @@ export default function Navbar() {
                       Sign Up
                     </Link>
                   </div>
-                </SignedOut>
+                )}
               </div>
             </div>
           </div>

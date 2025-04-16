@@ -1,88 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useUser } from '@clerk/clerk-react';
+import { useAuth } from '../contexts/AuthContext';
 import EventCard from '../components/ui/EventCard';
 import Button from '../components/ui/Button';
-
-// Mock data for demonstration
-const upcomingEvents = [
-  {
-    id: '1',
-    title: 'Annual Tech Conference',
-    description: 'Join us for the biggest tech conference of the year with speakers from leading tech companies.',
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-    location: 'Main Auditorium',
-    clubId: '1',
-    clubName: 'Tech Club',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Tech+Conference'
-  },
-  {
-    id: '2',
-    title: 'Art Exhibition',
-    description: 'Explore the creative works of our talented student artists in this semester\'s art exhibition.',
-    date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
-    location: 'Art Gallery',
-    clubId: '2',
-    clubName: 'Art Society',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Art+Exhibition'
-  }
-];
-
-const followedClubs = [
-  {
-    id: '1',
-    name: 'Tech Club',
-    logoUrl: 'https://via.placeholder.com/150?text=Tech',
-    category: 'Technology',
-    upcomingEventCount: 2
-  },
-  {
-    id: '2',
-    name: 'Art Society',
-    logoUrl: 'https://via.placeholder.com/150?text=Art',
-    category: 'Arts & Culture',
-    upcomingEventCount: 1
-  }
-];
-
-const notifications = [
-  {
-    id: '1',
-    type: 'event_reminder',
-    title: 'Event Reminder: Annual Tech Conference',
-    message: 'Don\'t forget about the Annual Tech Conference tomorrow!',
-    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    read: false
-  },
-  {
-    id: '2',
-    type: 'new_event',
-    title: 'New Event: Hackathon 2023',
-    message: 'Tech Club has posted a new event: Hackathon 2023',
-    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-    read: true
-  },
-  {
-    id: '3',
-    type: 'club_update',
-    title: 'Club Update: Art Society',
-    message: 'Art Society has updated their club information',
-    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    read: true
-  }
-];
+import { userAvatars, clubLogos, eventImages } from '../utils/imageData';
 
 export default function DashboardPage() {
-  const { user, isLoaded } = useUser();
+  const { currentUser, loading } = useAuth();
+  const [notifications, setNotifications] = useState([]);
+  const [followedClubs, setFollowedClubs] = useState([]);
 
-  if (!isLoaded) {
+  // Load user data and notifications
+  useEffect(() => {
+    if (!loading && currentUser) {
+      // Load notifications
+      const storedNotifications = JSON.parse(localStorage.getItem('unihub_notifications') || '[]');
+      const userNotifications = storedNotifications.filter(notification => notification.userId === currentUser.uid);
+      setNotifications(userNotifications);
+
+      // Load followed clubs
+      const storedClubs = JSON.parse(localStorage.getItem('unihub_clubs') || '[]');
+      const userFollowedClubs = storedClubs.filter(club => club.followers?.includes(currentUser.uid));
+
+      // Transform to the expected format
+      const formattedClubs = userFollowedClubs.map(club => ({
+        id: club.id,
+        name: club.name,
+        logoUrl: club.logoUrl || 'https://via.placeholder.com/150?text=' + club.name.charAt(0),
+        category: club.category,
+        upcomingEventCount: club.upcomingEvents?.length || 0
+      }));
+
+      setFollowedClubs(formattedClubs);
+    }
+  }, [loading, currentUser]);
+
+  // Mark notification as read
+  const markAsRead = (notificationId) => {
+    const updatedNotifications = notifications.map(notification =>
+      notification.id === notificationId ? { ...notification, read: true } : notification
+    );
+    setNotifications(updatedNotifications);
+
+    // Update localStorage
+    const allNotifications = JSON.parse(localStorage.getItem('unihub_notifications') || '[]');
+    const updatedAllNotifications = allNotifications.map(notification =>
+      notification.id === notificationId ? { ...notification, read: true } : notification
+    );
+    localStorage.setItem('unihub_notifications', JSON.stringify(updatedAllNotifications));
+  };
+
+  // Initialize empty upcoming events array
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+
+  if (loading) {
     return <div className="text-center py-12">Loading...</div>;
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Welcome, {user.firstName || 'User'}!</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Welcome, {currentUser?.displayName?.split(' ')[0] || 'User'}!</h1>
         <p className="text-gray-600">Here's what's happening in your campus community</p>
       </div>
 
@@ -104,27 +82,52 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">You haven't RSVP'd to any upcoming events.</p>
+              <div className="text-center py-8">
+                <div className="bg-gray-50 rounded-lg p-6 inline-block mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-gray-500">You haven't RSVP'd to any upcoming events.</p>
+                </div>
+                <Link to="/events" className="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center gap-1">
+                  <span>Explore Events</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </Link>
+              </div>
             )}
           </div>
 
           {/* Activity Feed */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-            <div className="space-y-4">
-              <div className="border-l-4 border-indigo-500 pl-4 py-2">
-                <p className="text-sm text-gray-500">Yesterday</p>
-                <p className="font-medium">You RSVP'd to Annual Tech Conference</p>
+            {followedClubs.length > 0 || notifications.length > 0 ? (
+              <div className="space-y-4">
+                {notifications.length > 0 && (
+                  <div className="border-l-4 border-indigo-500 pl-4 py-2">
+                    <p className="text-sm text-gray-500">Just now</p>
+                    <p className="font-medium">You started following {followedClubs[0]?.name || 'a club'}</p>
+                  </div>
+                )}
+                {followedClubs.length > 0 && (
+                  <div className="border-l-4 border-green-500 pl-4 py-2">
+                    <p className="text-sm text-gray-500">Today</p>
+                    <p className="font-medium">You discovered new clubs on UniHub</p>
+                  </div>
+                )}
               </div>
-              <div className="border-l-4 border-green-500 pl-4 py-2">
-                <p className="text-sm text-gray-500">3 days ago</p>
-                <p className="font-medium">You followed Tech Club</p>
+            ) : (
+              <div className="text-center py-6">
+                <div className="bg-gray-50 rounded-lg p-6 inline-block">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-gray-500">No activity yet.</p>
+                </div>
+                <p className="text-sm text-gray-500 mt-4">Follow clubs and interact with events to see your activity here.</p>
               </div>
-              <div className="border-l-4 border-yellow-500 pl-4 py-2">
-                <p className="text-sm text-gray-500">1 week ago</p>
-                <p className="font-medium">You commented on Art Exhibition</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -134,13 +137,13 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <div className="flex items-center mb-4">
               <img
-                src={user.imageUrl || 'https://via.placeholder.com/100?text=User'}
-                alt={user.fullName || 'User'}
+                src={userAvatars.male1 || 'https://via.placeholder.com/100?text=User'}
+                alt={currentUser?.displayName || 'User'}
                 className="h-16 w-16 rounded-full mr-4"
               />
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{user.fullName || 'User'}</h2>
-                <p className="text-gray-600">{user.primaryEmailAddress?.emailAddress || ''}</p>
+                <h2 className="text-xl font-bold text-gray-900">{currentUser?.displayName || 'User'}</h2>
+                <p className="text-gray-600">{currentUser?.email || ''}</p>
               </div>
             </div>
             <div className="flex justify-between text-center border-t border-gray-200 pt-4">
@@ -153,10 +156,16 @@ export default function DashboardPage() {
                 <p className="text-gray-600 text-sm">Events</p>
               </div>
               <div>
-                <p className="text-2xl font-bold">0</p>
-                <p className="text-gray-600 text-sm">Badges</p>
+                <p className="text-2xl font-bold">{notifications.length}</p>
+                <p className="text-gray-600 text-sm">Notifications</p>
               </div>
             </div>
+            {followedClubs.length === 0 && upcomingEvents.length === 0 && (
+              <div className="mt-4 bg-primary-50 rounded-lg p-3 text-sm text-primary-800">
+                <p className="font-medium">Welcome to UniHub!</p>
+                <p className="mt-1">Start by exploring clubs and events to personalize your dashboard.</p>
+              </div>
+            )}
             <div className="mt-4">
               <Link to="/profile">
                 <Button variant="secondary" className="w-full">Edit Profile</Button>
@@ -191,31 +200,70 @@ export default function DashboardPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500">You haven't followed any clubs yet.</p>
+              <div className="text-center py-6">
+                <div className="bg-gray-50 rounded-lg p-6 inline-block mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <p className="text-gray-500">You haven't followed any clubs yet.</p>
+                </div>
+                <Link to="/clubs" className="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center gap-1">
+                  <span>Discover Clubs</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </Link>
+              </div>
             )}
           </div>
 
           {/* Notifications */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Notifications</h2>
-            {notifications.length > 0 ? (
-              <ul className="space-y-4">
-                {notifications.map(notification => (
-                  <li
-                    key={notification.id}
-                    className={`p-3 rounded-md ${notification.read ? 'bg-gray-50' : 'bg-indigo-50 border-l-4 border-indigo-500'}`}
-                  >
-                    <p className="font-medium">{notification.title}</p>
-                    <p className="text-sm text-gray-600">{notification.message}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(notification.date).toLocaleDateString()}
-                    </p>
-                  </li>
-                ))}
+            <ul className="space-y-4">
+                {notifications.length > 0 ? (
+                  notifications.map(notification => (
+                    <li
+                      key={notification.id}
+                      className={`p-3 rounded-md ${notification.read ? 'bg-gray-50' : 'bg-indigo-50 border-l-4 border-indigo-500'}`}
+                      onClick={() => markAsRead(notification.id)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <p className="font-medium">{notification.title}</p>
+                        {!notification.read && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800">
+                            New
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600">{notification.message}</p>
+                      <div className="flex justify-between items-center mt-2">
+                        <p className="text-xs text-gray-500">
+                          {new Date(notification.date).toLocaleDateString()}
+                        </p>
+                        {notification.clubId && (
+                          <Link
+                            to={`/clubs/${notification.clubId}`}
+                            className="text-xs text-primary-600 hover:text-primary-800"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            View Club
+                          </Link>
+                        )}
+                      </div>
+                    </li>
+                  ))
+                ) : (
+                  <div className="text-center py-6">
+                    <div className="bg-gray-50 rounded-lg p-6 inline-block">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                      <p className="text-gray-500">No notifications yet.</p>
+                    </div>
+                  </div>
+                )}
               </ul>
-            ) : (
-              <p className="text-gray-500">No notifications to display.</p>
-            )}
           </div>
         </div>
       </div>

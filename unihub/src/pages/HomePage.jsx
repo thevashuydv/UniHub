@@ -4,6 +4,7 @@ import EventCard from '../components/ui/EventCard';
 import ClubCard from '../components/ui/ClubCard';
 import Button from '../components/ui/Button';
 import { scrollToElement } from '../utils/scrollUtils';
+import { backgroundImages, eventImages, clubLogos } from '../utils/imageData';
 
 // Mock data for demonstration
 const featuredEvents = [
@@ -15,7 +16,7 @@ const featuredEvents = [
     location: 'Main Auditorium',
     clubId: '1',
     clubName: 'Tech Club',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Tech+Conference'
+    imageUrl: eventImages.techConference
   },
   {
     id: '2',
@@ -25,7 +26,7 @@ const featuredEvents = [
     location: 'Art Gallery',
     clubId: '2',
     clubName: 'Art Society',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Art+Exhibition'
+    imageUrl: eventImages.artExhibition
   },
   {
     id: '3',
@@ -35,7 +36,7 @@ const featuredEvents = [
     location: 'Business School, Room 101',
     clubId: '3',
     clubName: 'Entrepreneurship Club',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Workshop'
+    imageUrl: eventImages.entrepreneurshipWorkshop
   }
 ];
 
@@ -44,7 +45,7 @@ const popularClubs = [
     id: '1',
     name: 'Tech Club',
     description: 'A community for tech enthusiasts to learn, collaborate, and innovate together.',
-    logoUrl: 'https://via.placeholder.com/150?text=Tech',
+    logoUrl: clubLogos.techClub,
     memberCount: 120,
     category: 'Technology'
   },
@@ -52,7 +53,7 @@ const popularClubs = [
     id: '2',
     name: 'Art Society',
     description: 'Express your creativity through various art forms and showcase your talent.',
-    logoUrl: 'https://via.placeholder.com/150?text=Art',
+    logoUrl: clubLogos.artSociety,
     memberCount: 85,
     category: 'Arts & Culture'
   },
@@ -60,7 +61,7 @@ const popularClubs = [
     id: '3',
     name: 'Entrepreneurship Club',
     description: 'Develop your business acumen and entrepreneurial skills through workshops and networking.',
-    logoUrl: 'https://via.placeholder.com/150?text=Business',
+    logoUrl: clubLogos.entrepreneurshipClub,
     memberCount: 95,
     category: 'Business'
   }
@@ -70,9 +71,21 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section id="hero" className="bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 text-white py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
+      <section id="hero" className="relative text-white py-32 sm:py-40 overflow-hidden">
+        {/* Background image with overlay */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={backgroundImages.heroBackground}
+            alt="Campus background"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-700/80 via-purple-600/80 to-pink-500/80"></div>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
             <h1 className="text-4xl font-extrabold sm:text-5xl md:text-6xl font-heading mb-4">
               Welcome to <span className="text-white">Uni<span className="text-pink-300">Hub</span></span>
             </h1>
@@ -130,6 +143,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
+        </div>
         </div>
       </section>
 

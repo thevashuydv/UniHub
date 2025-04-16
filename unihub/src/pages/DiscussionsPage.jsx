@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '../components/ui/Button';
+import { userAvatars } from '../utils/imageData';
 
 // Mock data for demonstration
 const discussions = [
@@ -11,7 +12,7 @@ const discussions = [
     author: {
       id: '1',
       name: 'John Smith',
-      imageUrl: 'https://via.placeholder.com/40?text=JS'
+      imageUrl: userAvatars.male1
     },
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
     commentCount: 15,
@@ -25,7 +26,7 @@ const discussions = [
     author: {
       id: '2',
       name: 'Emily Johnson',
-      imageUrl: 'https://via.placeholder.com/40?text=EJ'
+      imageUrl: userAvatars.female1
     },
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
     commentCount: 23,
@@ -39,7 +40,7 @@ const discussions = [
     author: {
       id: '3',
       name: 'Michael Lee',
-      imageUrl: 'https://via.placeholder.com/40?text=ML'
+      imageUrl: userAvatars.male2
     },
     createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
     commentCount: 8,
@@ -53,7 +54,7 @@ const discussions = [
     author: {
       id: '4',
       name: 'Sarah Garcia',
-      imageUrl: 'https://via.placeholder.com/40?text=SG'
+      imageUrl: userAvatars.female2
     },
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
     commentCount: 12,
@@ -67,7 +68,7 @@ const discussions = [
     author: {
       id: '5',
       name: 'David Chen',
-      imageUrl: 'https://via.placeholder.com/40?text=DC'
+      imageUrl: userAvatars.male3
     },
     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
     commentCount: 31,
@@ -83,16 +84,16 @@ export default function DiscussionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'popular'
-  
+
   // Filter discussions based on search term and category
   const filteredDiscussions = discussions.filter(discussion => {
-    const matchesSearch = discussion.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = discussion.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           discussion.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || discussion.tags.includes(selectedCategory);
-    
+
     return matchesSearch && matchesCategory;
   });
-  
+
   // Sort discussions
   const sortedDiscussions = [...filteredDiscussions].sort((a, b) => {
     if (sortBy === 'recent') {
@@ -109,7 +110,7 @@ export default function DiscussionsPage() {
     const now = new Date();
     const diffTime = Math.abs(now - date);
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       return 'Today';
     } else if (diffDays === 1) {
@@ -127,7 +128,7 @@ export default function DiscussionsPage() {
         <h1 className="text-3xl font-bold text-gray-900">Campus Discussions</h1>
         <Button>Start New Discussion</Button>
       </div>
-      
+
       {/* Search and Filter */}
       <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="md:col-span-2">
@@ -161,7 +162,7 @@ export default function DiscussionsPage() {
           </select>
         </div>
       </div>
-      
+
       {/* Discussions List */}
       {sortedDiscussions.length > 0 ? (
         <div className="space-y-6">
@@ -169,8 +170,8 @@ export default function DiscussionsPage() {
             <div key={discussion.id} className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-start">
                 <div className="flex-shrink-0 mr-4">
-                  <img 
-                    src={discussion.author.imageUrl} 
+                  <img
+                    src={discussion.author.imageUrl}
                     alt={discussion.author.name}
                     className="h-10 w-10 rounded-full"
                   />

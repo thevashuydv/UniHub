@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import ClubCard from '../components/ui/ClubCard';
 
-// Mock data for demonstration
-const allClubs = [
+export default function ClubsPage() {
+  const { currentUser } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [allClubs, setAllClubs] = useState([
   {
     id: '1',
     name: 'Tech Club',
@@ -75,28 +80,51 @@ const allClubs = [
     memberCount: 70,
     category: 'Community Service'
   }
-];
+]);
 
-// Categories for filtering
-const categories = ['All', 'Technology', 'Arts & Culture', 'Business', 'Community Service', 'Academic', 'Sports'];
+  // Categories for filtering
+  const categories = ['All', 'Technology', 'Arts & Culture', 'Business', 'Community Service', 'Academic', 'Sports', 'Religious', 'Political', 'Environmental', 'Other'];
 
-export default function ClubsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  
+  // Load clubs from localStorage if available
+  useEffect(() => {
+    const storedClubs = localStorage.getItem('unihub_clubs');
+    if (storedClubs) {
+      const parsedClubs = JSON.parse(storedClubs);
+      setAllClubs(prevClubs => {
+        // Combine stored clubs with mock clubs, avoiding duplicates by ID
+        const existingIds = new Set(prevClubs.map(club => club.id));
+        const newClubs = parsedClubs.filter(club => !existingIds.has(club.id));
+        return [...prevClubs, ...newClubs];
+      });
+    }
+  }, []);
+
   // Filter clubs based on search term and category
   const filteredClubs = allClubs.filter(club => {
-    const matchesSearch = club.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = club.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           club.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || club.category === selectedCategory;
-    
+
     return matchesSearch && matchesCategory;
   });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Campus Clubs</h1>
-      
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Campus Clubs</h1>
+        {currentUser && (
+          <Link
+            to="/clubs/register"
+            className="btn-primary px-4 py-2 rounded-lg text-sm inline-flex items-center gap-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span>Register New Club</span>
+          </Link>
+        )}
+      </div>
+
       {/* Search and Filter */}
       <div className="mb-8 flex flex-col md:flex-row gap-4">
         <div className="w-full md:w-2/3">
@@ -120,7 +148,7 @@ export default function ClubsPage() {
           </select>
         </div>
       </div>
-      
+
       {/* Clubs Grid */}
       {filteredClubs.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

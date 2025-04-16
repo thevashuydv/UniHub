@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import EventCard from '../components/ui/EventCard';
+import { eventImages } from '../utils/imageData';
 
 // Mock data for demonstration
 const allEvents = [
@@ -11,7 +12,7 @@ const allEvents = [
     location: 'Main Auditorium',
     clubId: '1',
     clubName: 'Tech Club',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Tech+Conference',
+    imageUrl: eventImages.techConference,
     category: 'Technology'
   },
   {
@@ -22,7 +23,7 @@ const allEvents = [
     location: 'Art Gallery',
     clubId: '2',
     clubName: 'Art Society',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Art+Exhibition',
+    imageUrl: eventImages.artExhibition,
     category: 'Arts & Culture'
   },
   {
@@ -33,7 +34,7 @@ const allEvents = [
     location: 'Business School, Room 101',
     clubId: '3',
     clubName: 'Entrepreneurship Club',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Workshop',
+    imageUrl: eventImages.entrepreneurshipWorkshop,
     category: 'Business'
   },
   {
@@ -44,7 +45,7 @@ const allEvents = [
     location: 'University Sports Field',
     clubId: '4',
     clubName: 'Community Service Club',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Charity+Run',
+    imageUrl: eventImages.charityRun,
     category: 'Sports'
   },
   {
@@ -55,7 +56,7 @@ const allEvents = [
     location: 'University Library',
     clubId: '5',
     clubName: 'Literary Society',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Poetry+Night',
+    imageUrl: eventImages.poetryNight,
     category: 'Arts & Culture'
   },
   {
@@ -66,7 +67,7 @@ const allEvents = [
     location: 'Computer Science Building',
     clubId: '1',
     clubName: 'Tech Club',
-    imageUrl: 'https://via.placeholder.com/400x200?text=Hackathon',
+    imageUrl: eventImages.hackathon,
     category: 'Technology'
   }
 ];
@@ -77,20 +78,20 @@ const categories = ['All', 'Technology', 'Arts & Culture', 'Business', 'Sports',
 export default function EventsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  
+
   // Filter events based on search term and category
   const filteredEvents = allEvents.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || event.category === selectedCategory;
-    
+
     return matchesSearch && matchesCategory;
   });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Campus Events</h1>
-      
+
       {/* Search and Filter */}
       <div className="mb-8 flex flex-col md:flex-row gap-4">
         <div className="w-full md:w-2/3">
@@ -114,7 +115,7 @@ export default function EventsPage() {
           </select>
         </div>
       </div>
-      
+
       {/* Events Grid */}
       {filteredEvents.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

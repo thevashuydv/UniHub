@@ -1,6 +1,6 @@
 import React from 'react';
-import { SignIn } from '@clerk/clerk-react';
 import { Link } from 'react-router-dom';
+import SignInForm from '../components/auth/SignInForm';
 
 export default function SignInPage() {
   return (
@@ -16,7 +16,7 @@ export default function SignInPage() {
           </p>
         </div>
         <div className="w-full max-w-md">
-          <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
+          <SignInForm />
         </div>
       </div>
     </div>

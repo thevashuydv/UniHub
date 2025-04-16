@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { eventImages } from '../../utils/imageData';
 
 export default function EventCard({ event }) {
   const { id, title, description, date, location, clubId, clubName, imageUrl } = event;
@@ -18,7 +19,7 @@ export default function EventCard({ event }) {
     <div className="card hover:translate-y-[-5px] overflow-hidden rounded-xl">
       <div className="h-48 overflow-hidden rounded-t-xl relative group">
         <img
-          src={imageUrl || 'https://via.placeholder.com/400x200?text=Event'}
+          src={imageUrl || eventImages[title.toLowerCase().replace(/\s+/g, '')] || eventImages.techConference}
           alt={title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
